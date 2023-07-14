@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+        <link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css" />
+    </head>
+<body>
+    <!-- ここに共通のヘッダーやサイドバーなどを配置 -->
+
+    {% block content %}{% endblock %}
+<div {% if not user.is_authenticated %}class="disable"{% endif %}>
+
+    <div class="fixed inset-x-0 bottom-0 h-16 bg-white   flex justify-around items-center">
+        <div class="flex flex-col items-center  text-2xl {% if url_name == 'home' %}text-blue-500{% else %}text-gray-500{% endif %}">
+            <a href="{% url 'home' %}">
+                <i class="fas fa-home "></i>
+                <span>home</span>
+            </a>
+        </div>
+        <div class="flex flex-col items-center  text-2xl {% if url_name == 'course_search' %}text-blue-500{% else %}text-gray-500{% endif %}">
+            <a href="{% url 'course_search' %}">
+                <i class="fas fa-search"></i>
+                <span>search</span>
+            </a>
+        </div>
+        <div class="flex flex-col items-center  text-2xl {% if url_name == 'timetable' %}text-blue-500{% else %}text-gray-500{% endif %}">
+            <a href="{% url 'timetable' %}">
+                <i class="fas fa-plus-square"></i>
+                <span>timetable</span>
+
+            </a>
+        </div>
+        <div class="flex flex-col items-center  text-2xl {% if url_name == 'mypage' %}text-blue-500{% else %}text-gray-500{% endif %}">
+            <a href="{% url 'mypage' %}">
+                <i class="fas fa-user-circle"></i>
+                <span>mypage</span>
+            </a>
+        </div>
+        
+    </div>
+</div>
+    <style>
+        .disable{
+            display: none;
+        }
+    </style>
+
+
+</body>
+</html>

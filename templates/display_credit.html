@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>{{request.user}}の単位取得状況</h1>
+    <table>
+      <tr>
+        <th>科目群</th>
+        <th>所定</th>
+        <th>修得</th>
+        <th class="husoku">不足</th>
+      </tr>
+      {% for genre in genres %}
+      <tr>
+        <td>{{ genre.name }}</td>
+        <td>{{ genre.credit_minimum }}</td>
+        <td>{{ genre.sum }}</td>
+        <td class="husoku">{{ genre.difference}}</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <th class="last">総合計</th>
+        <th class="last">{{ minimum_total }}</th>
+        <th class="last">{{ credit_total }}</th>
+        <th class="husoku">{{ difference_total }}</th>
+      </tr>
+    </table>
+    <style>
+      body {
+        width: 100%;
+      }
+      h1 {
+        color: #3888ff;
+        text-align: center;
+        padding: 50px 0;
+        border-bottom: 1px solid black;
+      }
+      table {
+        width: 90%;
+        margin: 50px auto;
+      }
+      th {
+        width: 5%;
+        padding: 5px 0;
+        color: #3888ff;
+      }
+      .husoku {
+        width: 5%;
+        padding: 5px 0;
+        color: red;
+      }
+      td {
+        text-align: center;
+        padding: 5px 0;
+      }
+      .last {
+        color: black;
+      }
+    </style>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+</div>
+
+<body class="bg-gray-100 py-20">
+    <div class="flex flex-col items-center">
+      <h1 class="mb-10 text-3xl font-bold text-blue-500">My Page</h1>
+      {% load static %}
+      <!-- Add your image source -->
+      <img class="mb-10 w-64 h-64 rounded-full object-cover" src="{% static 'images/logo.png' %}" alt="">
+  
+      {% if user.is_authenticated %}
+      <h3 class="text-2xl font-bold">{{ user.username }}</h3>
+      <h3 class="text-2xl font-bold">国際情報学部　{{ profile.grade }}年</h3>
+      <a href="{% url 'edit_profile' %}" class="w-64 mb-10 px-12 py-4 my-40 font-semibold rounded-full bg-blue-500 text-white text-center ">プロフィールを編集</a>
+
+      {% else %}
+      <a href="{% url 'signin' %}">サインインしてください</a>
+      {% endif %}
+  </div>
+  </body>
+{% endblock %}

@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+{% block content %}
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.jquery.com/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+<link href="//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css" rel="stylesheet" />
+</head>
+
+<body>
+<h2 class="text-2xl font-bold text-blue-500 mb-6 my-2 text-center">時間割</h2>
+    <div class="bg-white shadow-lg rounded px-8 pt-6 pb-8 mb-4 timetable-grade-and-semester">
+        <h1 class="text-2xl font-bold my-4">学年・学期を選択（「Ctrl+矢印キー」でも変更可能）</h1>
+        <label for="grade">学年:</label>
+        <select id="grade" name="grade" onclick="closeDrawer();"
+            class="shadow appearance-none border rounded w-50 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+        </select>
+        <label for="semester">学期:</label>
+        <select id="semester" name="semester" onclick="closeDrawer();"
+            class="shadow appearance-none border rounded w-50 py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+            <option value="1">前期</option>
+            <option value="2">後期</option>
+        </select>
+
+    </div>
+    <div class="md:flex md:items-center mb-12">
+        <div class="md:w-1/12"></div>
+        <div class="md:w-10/12">
+            <div id="grid-container" class="grid grid-cols-7 gap-1 md:gap-3 p-3 md:p-5">
+                <!-- JavaScriptによってここにカードが配置されます -->
+        
+            </div>
+        </div>
+        <div class="md:w-1/12"></div>
+    </div>
+
+
+    <div id="drawer-container" class=""></div>
+    <div class="h-32"></div>
+
+    <script>
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey) {
+                const gradeSelect = document.getElementById("grade");
+                const semesterSelect = document.getElementById("semester");
+
+                // Get current selected values
+                let grade = Number(gradeSelect.value);
+                let semester = Number(semesterSelect.value);
+
+                // Check if left or right arrow is pressed
+                if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+                    if (event.key === "ArrowLeft" && grade > 1) {
+                        grade--;
+                    }
+                    else if (event.key === "ArrowRight" && grade < 4) {
+                        grade++;
+                    }
+                    gradeSelect.value = grade;
+                }
+                // Check if up or down arrow is pressed
+                else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                    if (event.key === "ArrowUp" && semester > 1) {
+                        semester--;
+                    }
+                    else if (event.key === "ArrowDown" && semester < 2) {
+                        semester++;
+                    }
+                    semesterSelect.value = semester;
+                }
+            }
+            displayTimetable();
+        });
+
+
+
+        // 時間割表示機能
+        function displayTimetable() {
+            let grade = document.getElementById('grade').value;
+            let semester = document.getElementById('semester').value;
+            const drawerContaier = document.getElementById('drawer-container');
+            const drawer = document.createElement('div');
+            drawer.className = 'drawer w-full rounded-t-3xl bg-blue-200 p-8 text-xl';
+            drawerContaier.appendChild(drawer);
+
+            $.ajax({
+                url: "{% url 'display_timetable' %}",
+                type: "POST",
+                data: {
+                    grade: grade,
+                    semester: semester,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.status == "success") {
+                        const container = document.getElementById('grid-container');
+                        container.innerHTML = "";
+                        let days = ["", "月", "火", "水", "木", "金", "土"];
+                        let periods = ["", "1", "2", "3", "4", "5", "6"];
+                        let colorClass = {
+                            "情報基盤": "bg-blue-200",
+                            "情報法": "bg-yellow-200",
+                            "関連科目": "bg-green-200",
+                            "演習科目": "bg-red-200",
+                            "グローバル": "bg-purple-200",
+                            "教養": "bg-orange-200",
+                            "他学部履修科目": "bg-pink-200",
+                            " ": "bg-gray-200"
+                        }
+
+
+                        for (let period of periods) {
+                            for (let day of days) {
+                                const card = document.createElement('button');
+
+                                if (period == "") {
+                                    card.className = 'card bg-white text-2xl p-2 py-12 text-center';
+                                    card.textContent = day;
+                                    card.setAttribute('onclick', 'closeDrawer();');
+                                } else if (day == "") {
+                                    card.textContent = period;
+                                    card.className = 'card bg-white text-2xl p-2 py-12 text-center';
+                                    card.setAttribute('onclick', 'closeDrawer();');
+                                } else {
+                                    let courseName = data.courses[`${day}${period}`]["name"];
+                                    let classroom = data.courses[`${day}${period}`]["classroom"];
+                                    let professor = data.courses[`${day}${period}`]["prof"][0];
+                                    let genre = data.courses[`${day}${period}`]["genre"];
+                                    let color = colorClass[genre];
+                                    card.className = `card p-2 py-12 text-center ${color}`;
+                                    card.innerHTML = `${courseName} <br> ${classroom} <br> ${professor}`
+                                    card.setAttribute('onclick', `getAvailableCourse("${day}", "${period}")`);
+                                    card.addEventListener('click', function () {
+                                        const drawer = document.querySelector('.drawer');
+                                        if (parseInt(period, 10) >= 4) {
+                                            drawer.classList.remove('rounded-t-3xl');
+                                            drawer.classList.add('rounded-b-3xl');
+                                            drawer.classList.add('top');
+                                        } else {
+                                            drawer.classList.remove('rounded-b-3xl');
+                                            drawer.classList.add('rounded-t-3xl');
+                                            drawer.classList.remove('top');
+                                        }
+                                        if (!drawer.classList.contains('open')) {
+                                            drawer.classList.add('open');
+                                        }
+                                    });
+                                }
+                                container.appendChild(card);
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 時間割を登録するときに、登録可能な授業のリストを表示する関数
+        function getAvailableCourse(day, period) {
+            // 登録先の時間割の学年・学期
+            let grade = document.getElementById('grade').value;
+            let semester = document.getElementById('semester').value;
+            // 非同期処理
+            $.ajax({
+                url: "{% url 'show_courses' %}",
+                type: "POST",
+                data: {
+                    grade: document.getElementById('grade').value,
+                    semester: document.getElementById('semester').value,
+                    day: day,
+                    period: period,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                dataType: 'json',
+                success: function (data) {
+                    const drawer = document.querySelector('.drawer');
+
+                    if (data.status == "success") {
+                        console.log(data.courses);
+                        drawer.innerHTML = `<button class="block text-2xl py-4 " onclick="closeDrawer();">×</button>`;
+
+                        // 登録できる授業があるとき
+                        if (data.courses.length > 0) {
+                            // その授業たちをラジオボタンとして表示
+                            data.courses.forEach(element => {
+                                drawer.innerHTML += `
+                                    <input type="radio" 
+                                    id = "course-${element["id"]}"
+                                    name="courses" 
+                                    value="${element["id"]}" 
+                                    class="leading-4 ">
+                                <label for="course-${element["id"]}">${element["course_name"]}-(${element["course_prof"]})-${element["classroom"]}</label><br>`
+                            });
+
+                            // 登録ボタン
+                            drawer.innerHTML += `<br><button onclick="registerCourse(checkedCourse(),${grade},${semester})"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">登録する</button>`;
+
+                        }
+                        // 登録できる授業がないとき
+                        else {
+                            drawer.innerHTML += "受講できる科目がありません<br>";
+                        }
+
+                    }
+
+
+
+                }
+            });
+        }
+
+        // ラジオボタンで選択中の授業を取得
+        function checkedCourse() {
+            let elems = document.getElementsByName("courses");
+            for (let i = 0; i < elems.length; i++) {
+                // i番目のラジオボタンがチェックされているかを判定
+                if (elems[i].checked) {
+                    console.log(elems[i].value);
+                    return elems[i].value;
+                }
+            }
+        }
+
+        // 選択された授業を登録する
+        function registerCourse(courseId, grade, semester) {
+            $.ajax({
+                url: "{% url 'register_timetable' %}",
+                type: "POST",
+                data: {
+                    course_id: courseId,
+                    grade: grade,
+                    semester: semester,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                dataType: 'json',
+
+                // 登録できるかどうかによって通知を使い分ける
+                success: function (data) {
+                    if (data.status == "success") {
+                        toastr.success(data.message);
+                        console.log(data.message);
+                        // 登録処理を行ったら最新の時間割を表示する
+                        displayTimetable()
+                    } else if (data.status == "error") {
+                        toastr.error(data.message);
+                        console.log(data.message);
+                    } else {
+                        toastr.warning(data.message);
+                        console.log(data.message);
+                    }
+                }
+            });
+
+        }
+
+        // 画面下部から出るドローワーメニューを閉じる
+        function closeDrawer() {
+            const drawer = document.querySelector('.drawer');
+            drawer.classList.remove('open');
+        }
+
+        // 画面を読み込んだら時間割表示
+        window.onload = displayTimetable();
+
+        // 学年・学期が変更されたら時間割表示（更新）
+        let gradeElement = document.querySelector("#grade");
+        let semesterElement = document.querySelector("#semester");
+        gradeElement.addEventListener("change", (event) => {
+            displayTimetable();
+        });
+        semesterElement.addEventListener("change", (event) => {
+            displayTimetable();
+        });
+
+    </script>
+    <style>
+        /* 時間割を登録するときに画面下部から出てくるメニュー */
+        .drawer {
+            height: 0;
+            overflow: hidden;
+            transition: height 0.5s;
+            position: fixed;
+            bottom: 0;
+        }
+
+        .drawer.top {
+            top: 0;
+            bottom: auto;
+        }
+
+        .drawer.open {
+            height: 350px;
+            overflow: auto;
+        }
+    </style>
+</body>
+
+</html>
+{% endblock %}

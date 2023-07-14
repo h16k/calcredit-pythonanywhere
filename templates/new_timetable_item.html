@@ -1,0 +1,10 @@
+<h1>New Timetable Item</h1>
+<p>{{ message }}</p>
+<p>Course ID: {{ course_id }}</p>
+
+<h2>Timetables</h2>
+<ul>
+  {% for timetable in timetables %}
+  <li>{{ timetable.user }} - {{ timetable.course_instance }}</li>
+  {% endfor %}
+</ul>

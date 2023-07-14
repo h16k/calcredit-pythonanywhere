@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- ここにページ固有のHTMLを記述 -->
+
+<body class="bg-gray-100 py-20">
+  <div class="flex flex-col items-center">
+    <h1 class="mb-10 text-3xl font-bold text-blue-500">Credit Calculator</h1>
+    {% load static %}
+    <!-- Add your image source -->
+    <img class="mb-10 w-64 h-64 rounded-full object-cover" src="{% static 'images/logo.png' %}" alt="">
+
+    {% if user.is_authenticated %}
+        <h1 class="mb-10 text-2xl">ログイン中のユーザー：{{ user }}</h1>
+        <a href="{% url 'signout' %}" class="w-64 mb-10 px-12 py-4 font-semibold rounded-full bg-blue-500 text-white text-center ">サインアウトする</a>
+        <a href="{% url 'display_calculator' %}" class="w-64 mb-10 px-12 py-4 font-semibold rounded-full bg-blue-500 text-white text-center ">単位取得状況を確認</a>
+        
+    {% else %}
+        <a href="{% url 'signin' %}" class="w-64 mb-10 px-12 py-4 font-semibold rounded-full bg-blue-500 text-white text-center">SIGN IN</a>
+        <a href="{% url 'signup' %}" class="w-64 px-12 py-4 font-semibold rounded-full border border-blue-500 text-blue-500 bg-white text-center">CREATE ACCOUNT</a>
+    {% endif %}
+</div>
+</body>
+
+    
+    <script>
+        function toggleMenu() {
+          let accordion = document.getElementsById('accordion');
+          let montoggle = document.getElementById('montoggle');
+
+          if (accordion.style.display === 'none') {
+            accordion.style.display = 'block';
+            montoggle.innerText = "Close";
+          } else {
+            accordion.style.display = 'none';
+            montoggle.innerText = "Open";
+          }
+        }
+
+        window.onload = function () {
+          document.getElementById('monday').addEventListener('change', function (e) {
+            var checks = document.getElementsByClassName('mondayClass');
+            for (var i = 0; i < checks.length; i++) {
+              checks[i].checked = e.target.checked;
+            }
+          });
+        };
+
+    </script>
+{% endblock %}
+
+
